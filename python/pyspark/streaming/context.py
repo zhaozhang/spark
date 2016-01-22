@@ -281,6 +281,9 @@ class StreamingContext(object):
         """
         return DStream(self._jssc.textFileStream(directory), self, UTF8Deserializer())
 
+    def binaryFileStream(self, directory):
+        return DStream(self._jssc.binaryFileStream(directory), self, NoOpSerializer())
+
     def binaryRecordsStream(self, directory, recordLength):
         """
         Create an input stream that monitors a Hadoop-compatible file system

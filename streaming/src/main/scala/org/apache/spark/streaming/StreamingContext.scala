@@ -35,7 +35,7 @@ import org.apache.hadoop.mapreduce.{InputFormat => NewInputFormat}
 import org.apache.spark._
 import org.apache.spark.annotation.{DeveloperApi, Experimental}
 import org.apache.spark.deploy.SparkHadoopUtil
-import org.apache.spark.input.FixedLengthBinaryInputFormat
+import org.apache.spark.input.{FixedLengthBinaryInputFormat, PortableDataStream, StreamInputFormat}
 import org.apache.spark.rdd.{RDD, RDDOperationScope}
 import org.apache.spark.serializer.SerializationDebugger
 import org.apache.spark.storage.StorageLevel
@@ -471,6 +471,11 @@ class StreamingContext private[streaming] (
       bytes
     }
     data
+  }
+
+  def binaryFileStream(
+    directory: String): DStream[Array[Byte]] = withNamedScope("binary file stream") {
+    fileStream[String, PortableDataStream, StreamInputFormat](directory).map(_._2.toArray)
   }
 
   /**

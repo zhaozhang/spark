@@ -236,6 +236,10 @@ class JavaStreamingContext(val ssc: StreamingContext) extends Closeable {
     ssc.binaryRecordsStream(directory, recordLength)
   }
 
+  def binaryFileStream(directory: String): JavaDStream[Array[Byte]] = {
+    ssc.binaryFileStream(directory)
+  }
+
   /**
    * Create an input stream from network source hostname:port, where data is received
    * as serialized blocks (serialized using the Spark's serializer) that can be directly
