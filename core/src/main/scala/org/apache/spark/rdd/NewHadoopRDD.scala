@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import scala.reflect.ClassTag
+import scala.util.Random
 
 import org.apache.hadoop.conf.{Configurable, Configuration}
 import org.apache.hadoop.io.Writable
@@ -230,6 +231,7 @@ class NewHadoopRDD[K, V](
       case Some(c) =>
         try {
           val infos = c.newGetLocationInfo.invoke(split).asInstanceOf[Array[AnyRef]]
+          logInfo("Input split Location Count: " + infos.size)
           Some(HadoopRDD.convertSplitLocationInfo(infos))
         } catch {
           case e : Exception =>
@@ -238,7 +240,7 @@ class NewHadoopRDD[K, V](
         }
       case None => None
     }
-    locs.getOrElse(split.getLocations.filter(_ != "localhost"))
+    locs.getOrElse(Random.shuffle(split.getLocations.filter(_ != "localhost")))
   }
 
   override def persist(storageLevel: StorageLevel): this.type = {

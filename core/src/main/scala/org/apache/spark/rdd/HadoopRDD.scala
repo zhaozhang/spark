@@ -24,7 +24,6 @@ import java.io.EOFException
 import scala.collection.immutable.Map
 import scala.reflect.ClassTag
 import scala.collection.mutable.ListBuffer
-import scala.util.Random
 
 import org.apache.hadoop.conf.{Configurable, Configuration}
 import org.apache.hadoop.mapred.FileSplit
@@ -306,7 +305,6 @@ class HadoopRDD[K, V](
         try {
           val lsplit = c.inputSplitWithLocationInfo.cast(hsplit)
           val infos = c.getLocationInfo.invoke(lsplit).asInstanceOf[Array[AnyRef]]
-          logInfo("Input split Location Count: " + infos.size)
           Some(HadoopRDD.convertSplitLocationInfo(infos))
         } catch {
           case e: Exception =>
@@ -315,7 +313,7 @@ class HadoopRDD[K, V](
         }
       case None => None
     }
-    locs.getOrElse(Random.shuffle(hsplit.getLocations.filter(_ != "localhost")))
+    locs.getOrElse(hsplit.getLocations.filter(_ != "localhost"))
   }
 
   override def checkpoint() {
