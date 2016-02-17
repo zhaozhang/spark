@@ -240,6 +240,7 @@ class NewHadoopRDD[K, V](
         }
       case None => None
     }
+    locs.getOrElse(println(split.getLocations.toString))
     locs.getOrElse(Random.shuffle(split.getLocations.filter(_ != "localhost")))
   }
 
