@@ -913,7 +913,7 @@ class SparkContext(config: SparkConf) extends Logging with ExecutorAllocationCli
    *             list of inputs.
    * @param minPartitions A suggestion value of the minimal splitting number for input data.
    */
-  def binaryFiles(
+  /*def binaryFiles(
       path: String,
       minPartitions: Int = defaultMinPartitions): RDD[(String, PortableDataStream)] = withScope {
     assertNotStopped()
@@ -929,8 +929,17 @@ class SparkContext(config: SparkConf) extends Logging with ExecutorAllocationCli
       classOf[PortableDataStream],
       updateConf,
       minPartitions).setName(path)
-  }
+  }*/
 
+  def binaryFiles(
+    path: String,
+    minPartitions: Int = defaultMinPartitions): RDD[(String, PortableDataStream)] = withScope {
+    assertNotStopped()
+    val job = new NewHadoopJob(hadoopConfiguration)
+    NewFileInputFormat.setInputPaths(job, path)
+    val updateConf = SparkHadoopUtil.get.getConfigurationFromJobContext(job)
+    newAPIHadoopFile[String, PortableDataStream, StreamInputFormat](path, classOf[StreamInputFormat], classOf[String], classOf[PortableDataStream])
+  }
   /**
    * Load data from a flat binary file, assuming the length of each record is constant.
    *
