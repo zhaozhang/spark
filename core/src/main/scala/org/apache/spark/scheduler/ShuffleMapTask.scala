@@ -58,6 +58,7 @@ private[spark] class ShuffleMapTask(
   }
 
   override def runTask(context: TaskContext): MapStatus = {
+    logInfo("=============runTask==============")
     // Deserialize the RDD using the broadcast variable.
     val deserializeStartTime = System.currentTimeMillis()
     val ser = SparkEnv.get.closureSerializer.newInstance()
@@ -70,7 +71,13 @@ private[spark] class ShuffleMapTask(
     try {
       val manager = SparkEnv.get.shuffleManager
       writer = manager.getWriter[Any, Any](dep.shuffleHandle, partitionId, context)
-      writer.write(rdd.iterator(partition, context).asInstanceOf[Iterator[_ <: Product2[Any, Any]]])
+      /*writer.write(rdd.iterator(partition, context).asInstanceOf[Iterator[_ <: Product2[Any, Any]]])*/
+      val startStamp = System.currentTimeMillis()
+      val iter = rdd.iterator(partition, context).asInstanceOf[Iterator[_ <: Product2[Any, Any]]]
+      val endStamp = System.currentTimeMillis()
+      logInfo("Computing RDD " + rdd.id + "partition " +partition.index+ " takes " + 
+        (endStamp-startStamp)/1e6 + " seconds")
+      writer.write(iter)
       writer.stop(success = true).get
     } catch {
       case e: Exception =>

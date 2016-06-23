@@ -48,13 +48,14 @@ private[spark] class ResultTask[T, U](
     val outputId: Int,
     internalAccumulators: Seq[Accumulator[Long]])
   extends Task[U](stageId, stageAttemptId, partition.index, internalAccumulators)
-  with Serializable {
+  with Serializable with Logging{
 
   @transient private[this] val preferredLocs: Seq[TaskLocation] = {
     if (locs == null) Nil else locs.toSet.toSeq
   }
 
   override def runTask(context: TaskContext): U = {
+    logInfo("=============runTask==============")
     // Deserialize the RDD and the func using the broadcast variables.
     val deserializeStartTime = System.currentTimeMillis()
     val ser = SparkEnv.get.closureSerializer.newInstance()
@@ -63,7 +64,12 @@ private[spark] class ResultTask[T, U](
     _executorDeserializeTime = System.currentTimeMillis() - deserializeStartTime
 
     metrics = Some(context.taskMetrics)
-    func(context, rdd.iterator(partition, context))
+    val startStamp = System.currentTimeMillis()
+    val ret = func(context, rdd.iterator(partition, context))
+    val endStamp = System.currentTimeMillis()
+    logInfo("Computing RDD " + rdd.id + "partition " +partition.index+ " takes " + 
+      (endStamp-startStamp)/1e6 + " seconds")
+    ret
   }
 
   // This is only callable on the driver side.
