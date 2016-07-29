@@ -75,8 +75,8 @@ private[spark] class ShuffleMapTask(
       val startStamp = System.currentTimeMillis()
       val iter = rdd.iterator(partition, context).asInstanceOf[Iterator[_ <: Product2[Any, Any]]]
       val endStamp = System.currentTimeMillis()
-      logInfo("Computing RDD " + rdd.id + "partition " +partition.index+ " takes " + 
-        (endStamp-startStamp)/1e6 + " seconds")
+      logInfo("\nComputing RDD " + rdd.id + " partition " +partition.index+ " takes " + 
+        (endStamp-startStamp)/1e3 + " seconds")
       writer.write(iter)
       writer.stop(success = true).get
     } catch {
