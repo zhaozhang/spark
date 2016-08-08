@@ -68,7 +68,7 @@ import org.apache.spark.storage.BlockManagerMessages.BlockManagerHeartbeat
  *
  *  - Jobs (represented by [[ActiveJob]]) are the top-level work items submitted to the scheduler.
  *    For example, when the user calls an action, like count(), a job will be submitted through
- *    submitJob. Each Job may require the execution of multiple stages to build intermediate data.
+ *    x. Each Job may require the execution of multiple stages to build intermediate data.
  *
  *  - Stages ([[Stage]]) are sets of tasks that compute intermediate results in jobs, where each
  *    task computes the same function on partitions of the same RDD. Stages are separated at shuffle
@@ -397,6 +397,9 @@ class DAGScheduler(
     while (waitingForVisit.nonEmpty) {
       visit(waitingForVisit.pop())
     }
+    logInfo("+++++++++++++++++++")
+    logInfo("ParentStages: "+parents)
+    logInfo("VisitiedStages: "+visited)
     parents.toList
   }
 

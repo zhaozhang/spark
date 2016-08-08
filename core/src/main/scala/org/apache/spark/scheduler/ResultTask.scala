@@ -64,11 +64,12 @@ private[spark] class ResultTask[T, U](
     _executorDeserializeTime = System.currentTimeMillis() - deserializeStartTime
 
     metrics = Some(context.taskMetrics)
+    logInfo("\nComputing RDD " + rdd.id + " partition " +partition.index+", Accumulator: "+context.collectAccumulators)
     val startStamp = System.currentTimeMillis()
     val ret = func(context, rdd.iterator(partition, context))
     val endStamp = System.currentTimeMillis()
-    logInfo("Computing RDD " + rdd.id + "partition " +partition.index+ " takes " + 
-      (endStamp-startStamp)/1e6 + " seconds")
+    logInfo("\nComputing RDD " + rdd.id + " partition " +partition.index+ " takes " + 
+      (endStamp-startStamp)/1e3 + " seconds"+", Accumulator: "+context.collectAccumulators)
     ret
   }
 
