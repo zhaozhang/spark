@@ -99,7 +99,12 @@ private[spark] class ParallelCollectionRDD[T: ClassTag](
   }
 
   override def compute(s: Partition, context: TaskContext): Iterator[T] = {
-    new InterruptibleIterator(context, s.asInstanceOf[ParallelCollectionPartition[T]].iterator)
+    val startStamp = System.currentTimeMillis()
+    val ret = new InterruptibleIterator(context, s.asInstanceOf[ParallelCollectionPartition[T]].iterator).toList.toIterator
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(duration)
+    ret
   }
 
   override def getPreferredLocations(s: Partition): Seq[String] = {

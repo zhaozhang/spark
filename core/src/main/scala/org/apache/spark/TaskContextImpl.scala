@@ -17,7 +17,7 @@
 
 package org.apache.spark
 
-import scala.collection.mutable.{ArrayBuffer, HashMap}
+import scala.collection.mutable.{ArrayBuffer, HashMap, ListBuffer}
 
 import org.apache.spark.executor.TaskMetrics
 import org.apache.spark.memory.TaskMemoryManager
@@ -49,6 +49,8 @@ private[spark] class TaskContextImpl(
 
   // Whether the task has completed.
   @volatile private var completed: Boolean = false
+
+  private var timeSeq = new ListBuffer[Double]()
 
   override def addTaskCompletionListener(listener: TaskCompletionListener): this.type = {
     onCompleteCallbacks += listener
@@ -101,6 +103,9 @@ private[spark] class TaskContextImpl(
 
   override def getMetricsSources(sourceName: String): Seq[Source] =
     metricsSystem.getSourcesByName(sourceName)
+
+  override def appendTime(t: Double) = timeSeq += t
+  override def getTime () = timeSeq.toList
 
   @transient private val accumulators = new HashMap[Long, Accumulable[_, _]]
 

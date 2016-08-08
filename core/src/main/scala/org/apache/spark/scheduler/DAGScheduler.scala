@@ -1142,6 +1142,7 @@ class DAGScheduler(
       case Success =>
         listenerBus.post(SparkListenerTaskEnd(stageId, stage.latestInfo.attemptId, taskType,
           event.reason, event.taskInfo, event.taskMetrics))
+        logInfo("\nTask Execution Time: stageID: " +stageId+ ", partition: "+task.partitionId+", timeSeq: "+ event.taskMetrics.executorRunTimeSeq)
         stage.pendingPartitions -= task.partitionId
         task match {
           case rt: ResultTask[_, _] =>

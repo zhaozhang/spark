@@ -68,7 +68,7 @@ private[spark] abstract class Task[T](
     taskAttemptId: Long,
     attemptNumber: Int,
     metricsSystem: MetricsSystem)
-  : (T, AccumulatorUpdates) = {
+  : (T, AccumulatorUpdates, List[Double]) = {
     context = new TaskContextImpl(
       stageId,
       partitionId,
@@ -86,7 +86,7 @@ private[spark] abstract class Task[T](
       kill(interruptThread = false)
     }
     try {
-      (runTask(context), context.collectAccumulators())
+      (runTask(context), context.collectAccumulators(), context.getTime())
     } finally {
       context.markTaskCompleted()
       try {

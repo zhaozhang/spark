@@ -153,6 +153,9 @@ abstract class TaskContext extends Serializable {
    */
   def taskAttemptId(): Long
 
+  def appendTime(t: Double): Unit
+  def getTime(): List[Double]
+
   /** ::DeveloperApi:: */
   @DeveloperApi
   def taskMetrics(): TaskMetrics
