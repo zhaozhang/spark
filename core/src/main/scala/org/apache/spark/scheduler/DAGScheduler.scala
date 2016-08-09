@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import scala.collection.Map
-import scala.collection.mutable.{HashMap, HashSet, Stack}
+import scala.collection.mutable.{HashMap, HashSet, ListBuffer, Stack}
 import scala.concurrent.duration._
 import scala.language.existentials
 import scala.language.postfixOps
@@ -140,6 +140,9 @@ class DAGScheduler(
   private[scheduler] val stageIdToStage = new HashMap[Int, Stage]
   private[scheduler] val shuffleToMapStage = new HashMap[Int, ShuffleMapStage]
   private[scheduler] val jobIdToActiveJob = new HashMap[Int, ActiveJob]
+
+  // RDDs that are within one stage
+  private[scheduler] val rddIdToRDDs = new HashMap[Int, List[RDD[_]]]
 
   // Stages we need to run whose parents aren't done
   private[scheduler] val waitingStages = new HashSet[Stage]
@@ -378,9 +381,13 @@ class DAGScheduler(
     // We are manually maintaining a stack here to prevent StackOverflowError
     // caused by recursively visiting
     val waitingForVisit = new Stack[RDD[_]]
+    // Store all rdds within the same stage here
+    val stage = new ListBuffer[RDD[_]]()
     def visit(r: RDD[_]) {
       if (!visited(r)) {
         visited += r
+        // Prepend the rdd to this stage
+        r +=: stage
         // Kind of ugly: need to register RDDs with the cache here since
         // we can't do it in its constructor because # of partitions is unknown
         for (dep <- r.dependencies) {
@@ -397,9 +404,8 @@ class DAGScheduler(
     while (waitingForVisit.nonEmpty) {
       visit(waitingForVisit.pop())
     }
-    logInfo("+++++++++++++++++++")
-    logInfo("ParentStages: "+parents)
-    logInfo("VisitiedStages: "+visited)
+    //update rddIdToRDDs
+    rddIdToRDDs(rdd.id) = stage.toList
     parents.toList
   }
 
@@ -1142,7 +1148,13 @@ class DAGScheduler(
       case Success =>
         listenerBus.post(SparkListenerTaskEnd(stageId, stage.latestInfo.attemptId, taskType,
           event.reason, event.taskInfo, event.taskMetrics))
-        logInfo("\nTask Execution Time: stageID: " +stageId+ ", partition: "+task.partitionId+", timeSeq: "+ event.taskMetrics.executorRunTimeSeq)
+        logInfo("handleTaskCompletion, Task Execution Time: rddID: " +stage.rdd.id+ ", partition: "+task.partitionId+", timeSeq: "+ event.taskMetrics.executorRunTimeSeq)
+        logInfo("handleTaskCompletion, about to update "+rddIdToRDDs(stage.rdd.id))
+        val timeSeq = event.taskMetrics.executorRunTimeSeq
+        val rddSeq = rddIdToRDDs(stage.rdd.id)
+        timeSeq.zip(rddSeq).map{
+          case (t: Double, r: RDD[_]) => r.appendCost(t)
+        }
         stage.pendingPartitions -= task.partitionId
         task match {
           case rt: ResultTask[_, _] =>
