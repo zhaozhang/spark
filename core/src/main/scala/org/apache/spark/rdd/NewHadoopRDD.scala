@@ -220,7 +220,12 @@ class NewHadoopRDD[K, V](
         }
       }
     }
-    new InterruptibleIterator(context, iter)
+    val startStamp = System.currentTimeMillis()
+    val ret = new InterruptibleIterator(context, iter.toList.toIterator)
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(duration)
+    ret
   }
 
   /** Maps over a partition, providing the InputSplit that was used as the base of the partition. */
