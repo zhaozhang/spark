@@ -273,7 +273,6 @@ abstract class RDD[T: ClassTag](
       SparkEnv.get.cacheManager.getOrCompute(this, split, context, storageLevel)
     } else {
       val startStamp = System.currentTimeMillis()
-      logInfo("\nRDD.Iterator Start Computing RDD "+ id + " partition " +split.index+ " stamp "+startStamp)
       val ret = computeOrReadCheckpoint(split, context)
       val endStamp = System.currentTimeMillis()
       logInfo("\nRDD.Iterator Computing RDD " + id + " partition " +split.index+ " takes " + 

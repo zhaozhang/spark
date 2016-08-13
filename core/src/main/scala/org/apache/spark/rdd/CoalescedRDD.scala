@@ -92,9 +92,16 @@ private[spark] class CoalescedRDD[T: ClassTag](
   }
 
   override def compute(partition: Partition, context: TaskContext): Iterator[T] = {
-    partition.asInstanceOf[CoalescedRDDPartition].parents.iterator.flatMap { parentPartition =>
+    val startStamp = System.currentTimeMillis()
+    val ret = partition.asInstanceOf[CoalescedRDDPartition].parents.iterator.flatMap { parentPartition =>
       firstParent[T].iterator(parentPartition, context)
-    }
+    }.toList.toIterator
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    logInfo("\nComputing RDD "+ id + " partition " +partition.index+ " takes "+duration)
+    logInfo("\nComputing RDD "+ id + " partition " +partition.index+ " depeneds on "+partition.asInstanceOf[CoalescedRDDPartition].parents.size+ " partitions")
+    context.appendTime(duration)
+    ret
   }
 
   override def getDependencies: Seq[Dependency[_]] = {
