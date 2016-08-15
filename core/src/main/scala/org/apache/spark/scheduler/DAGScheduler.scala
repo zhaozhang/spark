@@ -1153,7 +1153,7 @@ class DAGScheduler(
         val timeSeq = event.taskMetrics.executorRunTimeSeq
         val rddSeq = rddIdToRDDs(stage.rdd.id)
         timeSeq.zip(rddSeq).map{
-          case (t: Double, r: RDD[_]) => r.appendCost(t)
+          case (m: Map[Int, Double], r: RDD[_]) => r.appendCost(m)
         }
         stage.pendingPartitions -= task.partitionId
         task match {

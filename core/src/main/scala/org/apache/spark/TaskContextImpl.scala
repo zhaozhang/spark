@@ -50,7 +50,7 @@ private[spark] class TaskContextImpl(
   // Whether the task has completed.
   @volatile private var completed: Boolean = false
 
-  private var timeSeq = new ListBuffer[Double]()
+  private var timeSeq = new ListBuffer[(Int, Int, Double)]()
 
   override def addTaskCompletionListener(listener: TaskCompletionListener): this.type = {
     onCompleteCallbacks += listener
@@ -104,8 +104,20 @@ private[spark] class TaskContextImpl(
   override def getMetricsSources(sourceName: String): Seq[Source] =
     metricsSystem.getSourcesByName(sourceName)
 
-  override def appendTime(t: Double) = timeSeq += t
-  override def getTime () = timeSeq.toList
+  override def appendTime(rddId: Int, partitionId: Int, t: Double) = {
+    val e = (rddId, partitionId, t)
+    timeSeq += e
+  }
+
+  override def getTime () = {
+    val sortedList = timeSeq.groupBy(_._1).map{
+      case (key, l) => l.sortBy(_._2)
+    }.toList.sortBy(_(0)._1)
+
+    sortedList.map(_.map{
+      case (a,b,c) => (b,c)
+    }).map(_.toMap)
+  }
 
   @transient private val accumulators = new HashMap[Long, Accumulable[_, _]]
 

@@ -68,7 +68,7 @@ private[spark] abstract class Task[T](
     taskAttemptId: Long,
     attemptNumber: Int,
     metricsSystem: MetricsSystem)
-  : (T, AccumulatorUpdates, List[Double]) = {
+  : (T, AccumulatorUpdates, List[Map[Int, Double]]) = {
     context = new TaskContextImpl(
       stageId,
       partitionId,

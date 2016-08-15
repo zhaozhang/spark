@@ -79,7 +79,7 @@ class CartesianRDD[T: ClassTag, U: ClassTag](
       }.toList.toIterator
     val endStamp = System.currentTimeMillis()
     val duration = (endStamp-startStamp)/1e3
-    context.appendTime(duration)
+    context.appendTime(id, split.index, duration)
     ret
   }
 

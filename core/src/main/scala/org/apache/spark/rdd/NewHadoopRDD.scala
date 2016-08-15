@@ -224,7 +224,7 @@ class NewHadoopRDD[K, V](
     val ret = new InterruptibleIterator(context, iter.toList.toIterator)
     val endStamp = System.currentTimeMillis()
     val duration = (endStamp-startStamp)/1e3
-    context.appendTime(duration)
+    context.appendTime(id, theSplit.index, duration)
     ret
   }
 

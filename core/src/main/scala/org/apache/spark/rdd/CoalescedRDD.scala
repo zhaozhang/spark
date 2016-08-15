@@ -100,7 +100,7 @@ private[spark] class CoalescedRDD[T: ClassTag](
     val duration = (endStamp-startStamp)/1e3
     logInfo("\nComputing RDD "+ id + " partition " +partition.index+ " takes "+duration)
     logInfo("\nComputing RDD "+ id + " partition " +partition.index+ " depeneds on "+partition.asInstanceOf[CoalescedRDDPartition].parents.size+ " partitions")
-    context.appendTime(duration)
+    context.appendTime(id, partition.index, duration)
     ret
   }
 

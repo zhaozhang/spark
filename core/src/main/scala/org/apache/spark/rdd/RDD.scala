@@ -143,9 +143,12 @@ abstract class RDD[T: ClassTag](
   @transient var name: String = null
 
   /** A list for generation cost */
-  var cost = new ListBuffer[Double]()
-  def appendCost(c: Double) = cost += c
-  def getCost(): Double = cost.sum/partitions.length
+  /** the following line has problem*/
+  var cost = Array.fill(partitions.size)(-1.toDouble)
+  def appendCost(m: Map[Int, Double]) = m.map{
+    case (index, value) => cost(index) = value
+  }
+  def getCost(): Double = cost.sum/partitions.size
 
   /** Assign a name to this RDD */
   def setName(_name: String): this.type = {

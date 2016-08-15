@@ -103,7 +103,7 @@ private[spark] class ParallelCollectionRDD[T: ClassTag](
     val ret = new InterruptibleIterator(context, s.asInstanceOf[ParallelCollectionPartition[T]].iterator).toList.toIterator
     val endStamp = System.currentTimeMillis()
     val duration = (endStamp-startStamp)/1e3
-    context.appendTime(duration)
+    context.appendTime(id, s.index, duration)
     ret
   }
 
