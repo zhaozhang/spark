@@ -65,6 +65,11 @@ private[spark] class PartitionwiseSampledRDD[T: ClassTag, U: ClassTag](
     val split = splitIn.asInstanceOf[PartitionwiseSampledRDDPartition]
     val thisSampler = sampler.clone
     thisSampler.setSeed(split.seed)
-    thisSampler.sample(firstParent[T].iterator(split.prev, context))
+    val startStamp = System.currentTimeMillis()
+    val ret = thisSampler.sample(firstParent[T].iterator(split.prev, context))
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(id, split.index, duration)
+    ret
   }
 }

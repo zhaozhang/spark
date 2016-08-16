@@ -20,7 +20,7 @@ package org.apache.spark.rdd
 import java.util.Random
 
 import scala.collection.{mutable, Map}
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.{ArrayBuffer, HashMap, ListBuffer}
 import scala.language.implicitConversions
 import scala.reflect.{classTag, ClassTag}
 
@@ -144,11 +144,10 @@ abstract class RDD[T: ClassTag](
 
   /** A list for generation cost */
   /** the following line has problem*/
-  var cost = Array.fill(partitions.size)(-1.toDouble)
-  def appendCost(m: Map[Int, Double]) = m.map{
-    case (index, value) => cost(index) = value
-  }
-  def getCost(): Double = cost.sum/partitions.size
+  var cost = new HashMap[Int, Double]
+  def appendCost(m: Map[Int, Double]) = cost ++= m
+
+  def getCost(): Double = cost.values.sum/partitions.size
 
   /** Assign a name to this RDD */
   def setName(_name: String): this.type = {
