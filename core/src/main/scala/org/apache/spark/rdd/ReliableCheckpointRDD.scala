@@ -93,7 +93,12 @@ private[spark] class ReliableCheckpointRDD[T: ClassTag](
    */
   override def compute(split: Partition, context: TaskContext): Iterator[T] = {
     val file = new Path(checkpointPath, ReliableCheckpointRDD.checkpointFileName(split.index))
-    ReliableCheckpointRDD.readCheckpointFile(file, broadcastedConf, context)
+    val startStamp = System.currentTimeMillis()
+    val ret = ReliableCheckpointRDD.readCheckpointFile(file, broadcastedConf, context).toList.toIterator
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(id, split.index, duration)
+    ret
   }
 
 }
