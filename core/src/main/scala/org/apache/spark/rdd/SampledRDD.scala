@@ -49,8 +49,7 @@ private[spark] class SampledRDD[T: ClassTag](
 
   override def compute(splitIn: Partition, context: TaskContext): Iterator[T] = {
     val split = splitIn.asInstanceOf[SampledRDDPartition]
-    val startStamp = System.currentTimeMillis()
-    val ret = if (withReplacement) {
+    if (withReplacement) {
       // For large datasets, the expected number of occurrences of each element in a sample with
       // replacement is Poisson(frac). We use that to get a count for each element.
       val poisson = new PoissonDistribution(frac)
@@ -68,9 +67,5 @@ private[spark] class SampledRDD[T: ClassTag](
       val rand = new Random(split.seed)
       firstParent[T].iterator(split.prev, context).filter(x => (rand.nextDouble <= frac))
     }
-    val endStamp = System.currentTimeMillis()
-    val duration = (endStamp-startStamp)/1e3
-    context.appendTime(id, splitIn.index, duration)
-    ret
   }
 }
