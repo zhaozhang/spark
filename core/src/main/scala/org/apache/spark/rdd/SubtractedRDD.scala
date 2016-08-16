@@ -127,7 +127,12 @@ private[spark] class SubtractedRDD[K: ClassTag, V: ClassTag, W: ClassTag](
     integrate(0, t => getSeq(t._1) += t._2)
     // the second dep is rdd2; remove all of its keys
     integrate(1, t => map.remove(t._1))
-    map.asScala.iterator.map(t => t._2.iterator.map((t._1, _))).flatten
+    val startStamp = System.currentTimeMillis()
+    val ret = map.asScala.iterator.map(t => t._2.iterator.map((t._1, _))).flatten.toList.toIterator
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(id, p.index, duration)
+    ret
   }
 
   override def clearDependencies() {
