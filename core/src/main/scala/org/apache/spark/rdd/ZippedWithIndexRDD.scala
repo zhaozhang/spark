@@ -64,8 +64,13 @@ class ZippedWithIndexRDD[T: ClassTag](prev: RDD[T]) extends RDD[(T, Long)](prev)
 
   override def compute(splitIn: Partition, context: TaskContext): Iterator[(T, Long)] = {
     val split = splitIn.asInstanceOf[ZippedWithIndexRDDPartition]
-    firstParent[T].iterator(split.prev, context).zipWithIndex.map { x =>
+    val startStamp = System.currentTimeMillis()
+    val ret = firstParent[T].iterator(split.prev, context).zipWithIndex.map { x =>
       (x._1, split.startIndex + x._2)
-    }
+    }.toList.toIterator
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(id, split.index, duration)
+    ret
   }
 }

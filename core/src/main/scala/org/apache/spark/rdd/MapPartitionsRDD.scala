@@ -39,8 +39,6 @@ private[spark] class MapPartitionsRDD[U: ClassTag, T: ClassTag](
     val ret = f(context, split.index, firstParent[T].iterator(split, context)).toList.toIterator
     val endStamp = System.currentTimeMillis()
     val duration = (endStamp-startStamp)/1e3
-    logInfo("Computing RDD "+ id + " partition " +split.index+ " takes "+duration)
-    logInfo("Computing RDD "+ id + " partition " +split.index+ " depeneds on 1 partition")
     context.appendTime(id, split.index, duration)
     ret
   }

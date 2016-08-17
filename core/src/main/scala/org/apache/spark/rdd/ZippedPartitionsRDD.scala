@@ -85,7 +85,12 @@ private[spark] class ZippedPartitionsRDD2[A: ClassTag, B: ClassTag, V: ClassTag]
 
   override def compute(s: Partition, context: TaskContext): Iterator[V] = {
     val partitions = s.asInstanceOf[ZippedPartitionsPartition].partitions
-    f(rdd1.iterator(partitions(0), context), rdd2.iterator(partitions(1), context))
+    val startStamp = System.currentTimeMillis()
+    val ret = f(rdd1.iterator(partitions(0), context), rdd2.iterator(partitions(1), context))
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(id, s.index, duration)
+    ret
   }
 
   override def clearDependencies() {
