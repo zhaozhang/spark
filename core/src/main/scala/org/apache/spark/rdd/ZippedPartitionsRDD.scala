@@ -86,7 +86,7 @@ private[spark] class ZippedPartitionsRDD2[A: ClassTag, B: ClassTag, V: ClassTag]
   override def compute(s: Partition, context: TaskContext): Iterator[V] = {
     val partitions = s.asInstanceOf[ZippedPartitionsPartition].partitions
     val startStamp = System.currentTimeMillis()
-    val ret = f(rdd1.iterator(partitions(0), context), rdd2.iterator(partitions(1), context))
+    val ret = f(rdd1.iterator(partitions(0), context), rdd2.iterator(partitions(1), context)).toList.toIterator
     val endStamp = System.currentTimeMillis()
     val duration = (endStamp-startStamp)/1e3
     context.appendTime(id, s.index, duration)
@@ -113,9 +113,14 @@ private[spark] class ZippedPartitionsRDD3
 
   override def compute(s: Partition, context: TaskContext): Iterator[V] = {
     val partitions = s.asInstanceOf[ZippedPartitionsPartition].partitions
-    f(rdd1.iterator(partitions(0), context),
+    val startStamp = System.currentTimeMillis()
+    val ret = f(rdd1.iterator(partitions(0), context),
       rdd2.iterator(partitions(1), context),
-      rdd3.iterator(partitions(2), context))
+      rdd3.iterator(partitions(2), context)).toList.toIterator
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(id, s.index, duration)
+    ret
   }
 
   override def clearDependencies() {
@@ -140,10 +145,15 @@ private[spark] class ZippedPartitionsRDD4
 
   override def compute(s: Partition, context: TaskContext): Iterator[V] = {
     val partitions = s.asInstanceOf[ZippedPartitionsPartition].partitions
-    f(rdd1.iterator(partitions(0), context),
+    val startStamp = System.currentTimeMillis()
+    val ret = f(rdd1.iterator(partitions(0), context),
       rdd2.iterator(partitions(1), context),
       rdd3.iterator(partitions(2), context),
-      rdd4.iterator(partitions(3), context))
+      rdd4.iterator(partitions(3), context)).toList.toIterator
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(id, s.index, duration)
+    ret
   }
 
   override def clearDependencies() {
