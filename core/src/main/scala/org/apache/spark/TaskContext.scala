@@ -154,7 +154,7 @@ abstract class TaskContext extends Serializable {
   def taskAttemptId(): Long
 
   def appendTime(rddId: Int, partitionId: Int, t: Double): Unit
-  def getTime(): List[Map[Int, Double]]
+  def getTime(): Map[Int, Map[Int, Double]]
 
   /** ::DeveloperApi:: */
   @DeveloperApi

@@ -84,7 +84,12 @@ class UnionRDD[T: ClassTag](
 
   override def compute(s: Partition, context: TaskContext): Iterator[T] = {
     val part = s.asInstanceOf[UnionPartition[T]]
-    parent[T](part.parentRddIndex).iterator(part.parentPartition, context)
+    val startStamp = System.currentTimeMillis()
+    val ret = parent[T](part.parentRddIndex).iterator(part.parentPartition, context).toList.toIterator
+    val endStamp = System.currentTimeMillis()
+    val duration = (endStamp-startStamp)/1e3
+    context.appendTime(id, s.index, duration)
+    ret
   }
 
   override def getPreferredLocations(s: Partition): Seq[String] =

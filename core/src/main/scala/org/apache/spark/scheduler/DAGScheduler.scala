@@ -1148,13 +1148,22 @@ class DAGScheduler(
       case Success =>
         listenerBus.post(SparkListenerTaskEnd(stageId, stage.latestInfo.attemptId, taskType,
           event.reason, event.taskInfo, event.taskMetrics))
-        logInfo("handleTaskCompletion, Task Execution Time: rddID: " +stage.rdd.id+ ", partition: "+task.partitionId+", timeSeq: "+ event.taskMetrics.executorRunTimeSeq)
+        logInfo("handleTaskCompletion, Task Execution Time: rddID: " +stage.rdd.id+ ", partition: "+task.partitionId+", timeSeq: "+ event.taskMetrics.executorRunTimeMap)
         logInfo("handleTaskCompletion, about to update "+rddIdToRDDs(stage.rdd.id))
-        val timeSeq = event.taskMetrics.executorRunTimeSeq
+        val timeMap = event.taskMetrics.executorRunTimeMap
         val rddSeq = rddIdToRDDs(stage.rdd.id)
-        timeSeq.zip(rddSeq).map{
+
+        val filteredRDDSeq = rddSeq.filter{
+          case rdd: RDD[_] => timeMap.contains(rdd.id)
+        }.sortBy(_.id)
+        logInfo("handleTaskCompletion, filteredRDDSeq: "+filteredRDDSeq.map(_.id))
+        val sortedTimeSeq = timeMap.toList.sortBy(_._1).map(_._2)
+        logInfo("handleTaskCompletion, sortedTimeSeq: "+sortedTimeSeq)
+
+        sortedTimeSeq.zip(filteredRDDSeq).map{
           case (m: Map[Int, Double], r: RDD[_]) => r.appendCost(m)
         }
+
         stage.pendingPartitions -= task.partitionId
         task match {
           case rt: ResultTask[_, _] =>

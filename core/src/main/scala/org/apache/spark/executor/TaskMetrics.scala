@@ -63,9 +63,9 @@ class TaskMetrics extends Serializable {
   def executorRunTime: Long = _executorRunTime
   private[spark] def setExecutorRunTime(value: Long) = _executorRunTime = value
 
-  private var _executorRunTimeSeq: List[Map[Int, Double]] = _
-  def executorRunTimeSeq: List[Map[Int, Double]] = _executorRunTimeSeq
-  private[spark] def setExecutorRunTimeSeq(value: List[Map[Int, Double]]) = _executorRunTimeSeq = value
+  private var _executorRunTimeMap: Map[Int, Map[Int, Double]] = _
+  def executorRunTimeMap: Map[Int, Map[Int, Double]] = _executorRunTimeMap
+  private[spark] def setExecutorRunTimeMap(value: Map[Int, Map[Int, Double]]) = _executorRunTimeMap = value
 
   /**
    * The number of bytes this task transmitted back to the driver as the TaskResult

@@ -210,7 +210,7 @@ private[spark] class Executor(
         // Run the actual task and measure its runtime.
         taskStart = System.currentTimeMillis()
         var threwException = true
-        val (value, accumUpdates, timeSeq) = try {
+        val (value, accumUpdates, timeMap) = try {
           val res = task.run(
             taskAttemptId = taskId,
             attemptNumber = attemptNumber,
@@ -247,7 +247,7 @@ private[spark] class Executor(
             (taskStart - deserializeStartTime) + task.executorDeserializeTime)
           // We need to subtract Task.run()'s deserialization time to avoid double-counting
           m.setExecutorRunTime((taskFinish - taskStart) - task.executorDeserializeTime)
-          m.setExecutorRunTimeSeq(timeSeq)
+          m.setExecutorRunTimeMap(timeMap)
           m.setJvmGCTime(computeTotalGcTime() - startGCTime)
           m.setResultSerializationTime(afterSerialization - beforeSerialization)
           m.updateAccumulators()

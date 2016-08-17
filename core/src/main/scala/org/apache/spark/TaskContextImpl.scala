@@ -109,14 +109,16 @@ private[spark] class TaskContextImpl(
     timeSeq += e
   }
 
-  override def getTime () = {
-    val sortedList = timeSeq.groupBy(_._1).map{
-      case (key, l) => l.sortBy(_._2)
-    }.toList.sortBy(_(0)._1)
+  override def getTime(): Map[Int, Map[Int, Double]] = {
+    val grouped = timeSeq.map(
+      x => (x._1, (x._2, x._3))
+    ).groupBy(_._1)
 
-    sortedList.map(_.map{
-      case (a,b,c) => (b,c)
-    }).map(_.toMap)
+    grouped.map{
+      case (k, v) => (k, v.map{
+        case (rddid, (pid, time)) => (pid,time)
+      }.toMap
+    )}
   }
 
   @transient private val accumulators = new HashMap[Long, Accumulable[_, _]]
