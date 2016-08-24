@@ -290,10 +290,11 @@ class HadoopRDD[K, V](
       }
     }
     val startStamp = System.currentTimeMillis()
-    var l = ListBuffer[(K, V)]()
+
     /*
      *  This is a temporary workaround for textFile only, sequence file should return incorrect results
      */
+    /*var l = ListBuffer[(K, V)]()
     while(iter.hasNext){
       val (key, value) = iter.next
       (key, value) match{
@@ -304,8 +305,8 @@ class HadoopRDD[K, V](
         }
       }
     }
-    var newIter = l.iterator
-    val ret = new InterruptibleIterator[(K, V)](context, newIter)
+    var newIter = l.iterator*/
+    val ret = new InterruptibleIterator[(K, V)](context, iter)
     val endStamp = System.currentTimeMillis()
     val duration = (endStamp-startStamp)/1e3
     context.appendTime(id, theSplit.index, duration)
