@@ -26,6 +26,8 @@ import scala.reflect.ClassTag
 import scala.collection.mutable.ListBuffer
 
 import org.apache.hadoop.conf.{Configurable, Configuration}
+import org.apache.hadoop.io.{ArrayWritable, BooleanWritable, BytesWritable, DoubleWritable,
+  FloatWritable, IntWritable, LongWritable, NullWritable, Text, Writable}
 import org.apache.hadoop.mapred.FileSplit
 import org.apache.hadoop.mapred.InputFormat
 import org.apache.hadoop.mapred.InputSplit
@@ -288,7 +290,22 @@ class HadoopRDD[K, V](
       }
     }
     val startStamp = System.currentTimeMillis()
-    val ret = new InterruptibleIterator[(K, V)](context, iter)
+    var l = ListBuffer[(K, V)]()
+    /*
+     *  This is a temporary workaround for textFile only, sequence file should return incorrect results
+     */
+    while(iter.hasNext){
+      val (key, value) = iter.next
+      (key, value) match{
+        case (k: LongWritable, v: Text) => {
+          val nk = new LongWritable(k.get)
+          val nv = new Text(v.toString)
+          l += ((nk.asInstanceOf[K], nv.asInstanceOf[V]))
+        }
+      }
+    }
+    var newIter = l.iterator
+    val ret = new InterruptibleIterator[(K, V)](context, newIter)
     val endStamp = System.currentTimeMillis()
     val duration = (endStamp-startStamp)/1e3
     context.appendTime(id, theSplit.index, duration)
