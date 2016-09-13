@@ -147,7 +147,7 @@ abstract class RDD[T: ClassTag](
   var cost = new HashMap[Int, Double]
   def appendCost(m: Map[Int, Double]) = cost ++= m
 
-  def getCost(): Double = cost.values.sum/partitions.size
+  def getCost(): Double = cost.values.sum
 
   /** Assign a name to this RDD */
   def setName(_name: String): this.type = {

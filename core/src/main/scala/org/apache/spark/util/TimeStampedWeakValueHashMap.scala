@@ -101,6 +101,9 @@ private[spark] class TimeStampedWeakValueHashMap[A, B](updateTimeStampOnGet: Boo
   /** Remove old key-value pairs with timestamps earlier than `threshTime`. */
   def clearOldValues(threshTime: Long): Unit = internalMap.clearOldValues(threshTime)
 
+  /** Remove old key-value pairs with least cost, by default remove 50%. */
+  def clearLeastValues(threshTime: Long): Unit = internalMap.clearLeastValues(threshTime)
+
   /** Remove entries with values that are no longer strongly reachable. */
   def clearNullValues() {
     val it = internalMap.getEntrySet.iterator

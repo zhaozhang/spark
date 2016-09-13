@@ -25,6 +25,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 import org.apache.spark.Logging
+import org.apache.spark.rdd._
 
 private[spark] case class TimeStampedValue[V](value: V, timestamp: Long)
 
@@ -132,6 +133,25 @@ private[spark] class TimeStampedHashMap[A, B](updateTimeStampOnGet: Boolean = fa
   /** Removes old key-value pairs that have timestamp earlier than `threshTime`. */
   def clearOldValues(threshTime: Long) {
     clearOldValues(threshTime, (_, _) => ())
+  }
+
+  /** Removes old key-value paris that have the lowest cost. */
+  def clearLeastValues(threshTime: Long) = {
+    val rddList = getEntrySet.iterator.asScala.map(kv => kv.getValue.value).toList
+    val costList = rddList.map(_.asInstanceOf[RDD[_]].getCost)
+    logDebug("TImeStampedHashMap: calling clearLeastValues() costList: "+ costList)
+    val sortedCostList = costList.sorted
+    val medianCost = sortedCostList(costList.size/2)
+
+    val it = getEntrySet.iterator
+    while (it.hasNext) {
+      val entry = it.next()
+      val rdd = entry.getValue.value.asInstanceOf[RDD[_]]
+      if (rdd.getCost < medianCost) {
+        logDebug("TImeStampedHashMap: calling clearLeastValues() Removing key " + entry.getKey)
+        it.remove()
+      }
+    }
   }
 
   private def currentTime: Long = System.currentTimeMillis

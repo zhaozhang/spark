@@ -2188,7 +2188,8 @@ class SparkContext(config: SparkConf) extends Logging with ExecutorAllocationCli
 
   /** Called by MetadataCleaner to clean up the persistentRdds map periodically */
   private[spark] def cleanup(cleanupTime: Long) {
-    persistentRdds.clearOldValues(cleanupTime)
+    //persistentRdds.clearOldValues(cleanupTime)
+    persistentRdds.clearLeastValues(cleanupTime)
   }
 
   // In order to prevent multiple SparkContexts from being active at the same time, mark this
