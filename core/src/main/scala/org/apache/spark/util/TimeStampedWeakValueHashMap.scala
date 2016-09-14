@@ -20,10 +20,12 @@ package org.apache.spark.util
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicInteger
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.language.implicitConversions
 
 import org.apache.spark.Logging
+import org.apache.spark.rdd._
 
 /**
  * A wrapper of TimeStampedHashMap that ensures the values are weakly referenced and timestamped.
@@ -102,7 +104,23 @@ private[spark] class TimeStampedWeakValueHashMap[A, B](updateTimeStampOnGet: Boo
   def clearOldValues(threshTime: Long): Unit = internalMap.clearOldValues(threshTime)
 
   /** Remove old key-value pairs with least cost, by default remove 50%. */
-  def clearLeastValues(threshTime: Long): Unit = internalMap.clearLeastValues(threshTime)
+  def clearLeastValues(threshTime: Long): Unit = {
+    val rddList = internalMap.getEntrySet.iterator.asScala.map(kv => kv.getValue.value).toList
+    val costList = rddList.map(_.get.asInstanceOf[RDD[_]].getCost)
+    logDebug("TimeStampedHashMap: calling clearLeastValues() costList: "+ costList)
+    val sortedCostList = costList.sorted
+    val medianCost = sortedCostList(costList.size/2)
+
+    val it = internalMap.getEntrySet.iterator
+    while (it.hasNext) {
+      val entry = it.next()
+      val rdd = entry.getValue.value.get.asInstanceOf[RDD[_]]
+      if (rdd.getCost < medianCost) {
+        logDebug("TimeStampedHashMap: calling clearLeastValues() Removing key " + entry.getKey)
+        it.remove()
+      }
+    }
+  }
 
   /** Remove entries with values that are no longer strongly reachable. */
   def clearNullValues() {
