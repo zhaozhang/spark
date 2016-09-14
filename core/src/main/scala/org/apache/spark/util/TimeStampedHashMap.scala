@@ -17,6 +17,7 @@
 
 package org.apache.spark.util
 
+import java.lang.ref.WeakReference
 import java.util.Set
 import java.util.Map.Entry
 import java.util.concurrent.ConcurrentHashMap
@@ -138,7 +139,7 @@ private[spark] class TimeStampedHashMap[A, B](updateTimeStampOnGet: Boolean = fa
   /** Removes old key-value paris that have the lowest cost. */
   def clearLeastValues(threshTime: Long) = {
     val rddList = getEntrySet.iterator.asScala.map(kv => kv.getValue.value).toList
-    val costList = rddList.map(_.asInstanceOf[RDD[_]].getCost)
+    val costList = rddList.map(_.asInstanceOf[WeakReference[_]].get.asInstanceOf[RDD[_]].getCost)
     logDebug("TimeStampedHashMap: calling clearLeastValues() costList: "+ costList)
     val sortedCostList = costList.sorted
     val medianCost = sortedCostList(costList.size/2)
@@ -146,7 +147,7 @@ private[spark] class TimeStampedHashMap[A, B](updateTimeStampOnGet: Boolean = fa
     val it = getEntrySet.iterator
     while (it.hasNext) {
       val entry = it.next()
-      val rdd = entry.getValue.value.asInstanceOf[RDD[_]]
+      val rdd = entry.getValue.value.asInstanceOf[WeakReference[_]].get.asInstanceOf[RDD[_]]
       if (rdd.getCost < medianCost) {
         logDebug("TimeStampedHashMap: calling clearLeastValues() Removing key " + entry.getKey)
         it.remove()
