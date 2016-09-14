@@ -139,7 +139,7 @@ private[spark] class TimeStampedHashMap[A, B](updateTimeStampOnGet: Boolean = fa
   def clearLeastValues(threshTime: Long) = {
     val rddList = getEntrySet.iterator.asScala.map(kv => kv.getValue.value).toList
     val costList = rddList.map(_.asInstanceOf[RDD[_]].getCost)
-    logDebug("TImeStampedHashMap: calling clearLeastValues() costList: "+ costList)
+    logDebug("TimeStampedHashMap: calling clearLeastValues() costList: "+ costList)
     val sortedCostList = costList.sorted
     val medianCost = sortedCostList(costList.size/2)
 
@@ -148,7 +148,7 @@ private[spark] class TimeStampedHashMap[A, B](updateTimeStampOnGet: Boolean = fa
       val entry = it.next()
       val rdd = entry.getValue.value.asInstanceOf[RDD[_]]
       if (rdd.getCost < medianCost) {
-        logDebug("TImeStampedHashMap: calling clearLeastValues() Removing key " + entry.getKey)
+        logDebug("TimeStampedHashMap: calling clearLeastValues() Removing key " + entry.getKey)
         it.remove()
       }
     }
