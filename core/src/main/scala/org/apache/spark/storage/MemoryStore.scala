@@ -443,6 +443,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
       if (freedMemory >= space) {
         logInfo(s"${selectedBlocks.size} blocks selected for dropping")
         for (blockId <- selectedBlocks) {
+          logInfo(s"MemoryStore(): block ${blockId} selected for dropping")
           val entry = entries.synchronized { entries.get(blockId) }
           // This should never be null as only one task should be dropping
           // blocks and removing entries. However the check is still here for
