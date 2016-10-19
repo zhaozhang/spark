@@ -55,6 +55,8 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
   // memory (SPARK-4777).
   private val pendingUnrollMemoryMap = mutable.HashMap[Long, Long]()
 
+  private val costMap = mutable.HashMap[BlockId, Long]()
+
   // Initial memory to request before unrolling any block
   private val unrollMemoryThreshold: Long =
     conf.getLong("spark.storage.unrollMemoryThreshold", 1024 * 1024)
@@ -278,6 +280,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     }
 
     // Unroll this block safely, checking whether we have exceeded our threshold periodically
+    val startStamp = System.currentTimeMillis
     try {
       while (values.hasNext && keepUnrolling) {
         vector += values.next()
@@ -297,6 +300,8 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
       if (keepUnrolling) {
         // We successfully unrolled the entirety of this block
+        val endStamp = System.currentTimeMillis
+        costMap(blockId) = endStamp - startStamp
         Left(vector.toArray)
       } else {
         // We ran out of space while unrolling the values for this block
@@ -432,6 +437,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
         val iterator = entries.entrySet().iterator()
         // This section of code selects which blocks to evict
         // The new cache replacement algorithm should make decision here
+        logInfo("MemoryStore(): current costMap: "+costMap.toString)
         while (freedMemory < space && iterator.hasNext) {
           val pair = iterator.next()
           val blockId = pair.getKey
