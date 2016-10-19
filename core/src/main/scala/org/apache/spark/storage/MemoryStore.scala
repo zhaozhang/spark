@@ -301,7 +301,10 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
       if (keepUnrolling) {
         // We successfully unrolled the entirety of this block
         val endStamp = System.currentTimeMillis
-        costMap(blockId) = endStamp - startStamp
+        blockId match{
+          case id: RDDBlockId => costMap(blockId) = endStamp - startStamp
+          case _ =>
+        }
         Left(vector.toArray)
       } else {
         // We ran out of space while unrolling the values for this block
