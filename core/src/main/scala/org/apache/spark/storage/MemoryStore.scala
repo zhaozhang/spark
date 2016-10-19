@@ -430,6 +430,8 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
       // can lead to exceptions.
       entries.synchronized {
         val iterator = entries.entrySet().iterator()
+        // This section of code selects which blocks to evict
+        // The new cache replacement algorithm should make decision here
         while (freedMemory < space && iterator.hasNext) {
           val pair = iterator.next()
           val blockId = pair.getKey
