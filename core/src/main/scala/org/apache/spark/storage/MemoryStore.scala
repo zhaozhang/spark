@@ -56,6 +56,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
   private val pendingUnrollMemoryMap = mutable.HashMap[Long, Long]()
 
   private val costMap = mutable.HashMap[BlockId, Long]()
+  private val accessMap = mutable.HashMap[BlockId, ArrayBuffer[Long]]()
 
   // Initial memory to request before unrolling any block
   private val unrollMemoryThreshold: Long =
@@ -191,7 +192,17 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     val entry = entries.synchronized {
       entries.get(blockId)
     }
+
+    //Initialize accessMap entry
+    if (!accessMap.contains(blockId)) {
+      accessMap(blockId) = ArrayBuffer[Long]()
+    }
+    accessMap(blockId).append(System.currentTimeMillis)
+    logInfo("MemoryStore(): getBytes(): accessMap: "+accessMap.toString)
+
     if (entry == null) {
+      //This indicates the entry was cached, then evicted and access again, 
+      //This is a negative feedback for the algorithm
       None
     } else if (entry.deserialized) {
       Some(blockManager.dataSerialize(blockId, entry.value.asInstanceOf[Array[Any]].iterator))
@@ -204,6 +215,13 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     val entry = entries.synchronized {
       entries.get(blockId)
     }
+
+    if (!accessMap.contains(blockId)) {
+      accessMap(blockId) = ArrayBuffer[Long]()
+    }
+    accessMap(blockId).append(System.currentTimeMillis)
+    logInfo("MemoryStore(): getValues(): accessMap: "+accessMap.toString)
+
     if (entry == null) {
       None
     } else if (entry.deserialized) {
