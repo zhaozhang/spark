@@ -208,6 +208,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
 
     if (entry == null) {
+      logInfo("MemoryStore(): getBytes(): block "+blockId+" does not exist")
       if (accessMap.contains(blockId))
         logInfo("MemoryStore(): getBytes(): evicted block "+blockId+" is accessed")
       None
@@ -237,6 +238,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
 
     if (entry == null) {
+      logInfo("MemoryStore(): getValues(): block "+blockId+" does not exist")
       if (accessMap.contains(blockId))
         logInfo("MemoryStore(): getValues(): evicted block "+blockId+" is accessed")
       None
