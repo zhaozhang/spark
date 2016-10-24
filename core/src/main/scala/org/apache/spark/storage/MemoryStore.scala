@@ -197,6 +197,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     blockId match{
       case id: RDDBlockId => {
         if (!accessMap.contains(id)) {
+          //This is an error, the entry should be created when rdd is cached
           accessMap(id) = ArrayBuffer[Long]()
         }
         accessMap(id).append(System.currentTimeMillis)
@@ -225,6 +226,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     blockId match{
       case id: RDDBlockId => {
         if (!accessMap.contains(id)) {
+          //This is an error, the entry should be created when rdd is cached
           accessMap(id) = ArrayBuffer[Long]()
         }
         accessMap(id).append(System.currentTimeMillis)
@@ -332,7 +334,10 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
         // We successfully unrolled the entirety of this block
         val endStamp = System.currentTimeMillis
         blockId match{
-          case id: RDDBlockId => costMap(blockId) = endStamp - startStamp
+          case id: RDDBlockId => {
+            costMap(id) = endStamp - startStamp
+            accessMap(id) = ArrayBuffer[Long](endStamp)
+          }
           case _ =>
         }
         Left(vector.toArray)
