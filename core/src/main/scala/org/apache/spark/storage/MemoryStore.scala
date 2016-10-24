@@ -336,7 +336,9 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
         blockId match{
           case id: RDDBlockId => {
             costMap(id) = endStamp - startStamp
-            accessMap(id) = ArrayBuffer[Long](endStamp)
+            if (!accessMap.contains(id))
+              accessMap(id) = ArrayBuffer[Long]()
+            accessMap(id).append(endStamp)
           }
           case _ =>
         }
