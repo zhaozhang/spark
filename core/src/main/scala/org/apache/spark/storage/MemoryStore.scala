@@ -208,8 +208,8 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
 
     if (entry == null) {
-      //This indicates the entry was cached, then evicted and access again, 
-      //This is a negative feedback for the algorithm
+      if (accessMap.contains(blockId))
+        logInfo("MemoryStore(): getBytes(): evicted block "+blockId+" is accessed")
       None
     } else if (entry.deserialized) {
       Some(blockManager.dataSerialize(blockId, entry.value.asInstanceOf[Array[Any]].iterator))
@@ -237,6 +237,8 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
 
     if (entry == null) {
+      if (accessMap.contains(blockId))
+        logInfo("MemoryStore(): getValues(): evicted block "+blockId+" is accessed")
       None
     } else if (entry.deserialized) {
       Some(entry.value.asInstanceOf[Array[Any]].iterator)
