@@ -194,11 +194,17 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     }
 
     //Initialize accessMap entry
-    if (!accessMap.contains(blockId)) {
-      accessMap(blockId) = ArrayBuffer[Long]()
+    blockId match{
+      case id: RDDBlockId => {
+        if (!accessMap.contains(id)) {
+          accessMap(id) = ArrayBuffer[Long]()
+        }
+        accessMap(id).append(System.currentTimeMillis)
+        logInfo("MemoryStore(): getBytes(): accessMap: "+accessMap.toString)
+      }
+      case _ =>
     }
-    accessMap(blockId).append(System.currentTimeMillis)
-    logInfo("MemoryStore(): getBytes(): accessMap: "+accessMap.toString)
+
 
     if (entry == null) {
       //This indicates the entry was cached, then evicted and access again, 
@@ -216,11 +222,17 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
       entries.get(blockId)
     }
 
-    if (!accessMap.contains(blockId)) {
-      accessMap(blockId) = ArrayBuffer[Long]()
+    blockId match{
+      case id: RDDBlockId => {
+        if (!accessMap.contains(id)) {
+          accessMap(id) = ArrayBuffer[Long]()
+        }
+        accessMap(id).append(System.currentTimeMillis)
+        logInfo("MemoryStore(): getValues(): accessMap: "+accessMap.toString)
+      }
+      case _ =>
     }
-    accessMap(blockId).append(System.currentTimeMillis)
-    logInfo("MemoryStore(): getValues(): accessMap: "+accessMap.toString)
+
 
     if (entry == null) {
       None
