@@ -55,8 +55,8 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
   // memory (SPARK-4777).
   private val pendingUnrollMemoryMap = mutable.HashMap[Long, Long]()
 
-  private val costMap = mutable.HashMap[BlockId, Long]()
-  private val accessMap = mutable.HashMap[BlockId, ArrayBuffer[Long]]()
+  val costMap = mutable.HashMap[BlockId, Long]()
+  val accessMap = mutable.HashMap[BlockId, ArrayBuffer[Long]]()
 
   // Initial memory to request before unrolling any block
   private val unrollMemoryThreshold: Long =
@@ -208,9 +208,6 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
 
     if (entry == null) {
-      logInfo("MemoryStore(): getBytes(): block "+blockId+" does not exist")
-      if (accessMap.contains(blockId))
-        logInfo("MemoryStore(): getBytes(): evicted block "+blockId+" is accessed")
       None
     } else if (entry.deserialized) {
       Some(blockManager.dataSerialize(blockId, entry.value.asInstanceOf[Array[Any]].iterator))
@@ -238,10 +235,6 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
 
     if (entry == null) {
-      //tried, the false eviction can not be detected here
-      logInfo("MemoryStore(): getValues(): block "+blockId+" does not exist")
-      if (accessMap.contains(blockId))
-        logInfo("MemoryStore(): getValues(): evicted block "+blockId+" is accessed")
       None
     } else if (entry.deserialized) {
       Some(entry.value.asInstanceOf[Array[Any]].iterator)
