@@ -448,6 +448,7 @@ private[spark] class BlockManager(
         // on disk or from off heap storage without using removeBlock, this conditional check will
         // still pass but eventually we will get an exception because we can't find the block.
         if (blockInfo.get(blockId).isEmpty) {
+          logInfo(s"BlockManager() doGetLocal(): Block $blockId does not exist is checked here")
           logWarning(s"Block $blockId had been removed")
           return None
         }

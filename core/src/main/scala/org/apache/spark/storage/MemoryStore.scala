@@ -238,6 +238,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
 
     if (entry == null) {
+      //tried, the false eviction can not be detected here
       logInfo("MemoryStore(): getValues(): block "+blockId+" does not exist")
       if (accessMap.contains(blockId))
         logInfo("MemoryStore(): getValues(): evicted block "+blockId+" is accessed")
