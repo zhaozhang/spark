@@ -55,6 +55,15 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
   // memory (SPARK-4777).
   private val pendingUnrollMemoryMap = mutable.HashMap[Long, Long]()
 
+  //costMap maintains the genearting cost for each block
+  //the time cost is derived from unrollSafely()
+  val costMap = mutable.HashMap[BlockId, Long]()
+
+  //accessMap records the timestamp for each block access
+  //access is not evicted with block
+  //false eviction can be detected in BlockManager's doGetLocal()
+  val accessMap = mutable.HashMap[BlockId, ArrayBuffer[Long]]()
+
   // Initial memory to request before unrolling any block
   private val unrollMemoryThreshold: Long =
     conf.getLong("spark.storage.unrollMemoryThreshold", 1024 * 1024)
@@ -189,6 +198,16 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     val entry = entries.synchronized {
       entries.get(blockId)
     }
+
+    //Recording access timestamp
+    blockId match{
+      case id: RDDBlockId => {
+        accessMap(id).append(System.currentTimeMillis)
+        logInfo("getBytes(): accessMap: "+accessMap.toString)
+      }
+      case _ =>
+    }
+
     if (entry == null) {
       None
     } else if (entry.deserialized) {
@@ -202,6 +221,16 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     val entry = entries.synchronized {
       entries.get(blockId)
     }
+
+    //Recording access timestamp
+    blockId match{
+      case id: RDDBlockId => {
+        accessMap(id).append(System.currentTimeMillis)
+        logInfo("getValues(): accessMap: "+accessMap.toString)
+      }
+      case _ =>
+    }
+
     if (entry == null) {
       None
     } else if (entry.deserialized) {
@@ -279,6 +308,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
     // Unroll this block safely, checking whether we have exceeded our threshold periodically
     try {
+      val startStamp = System.currentTimeMillis
       while (values.hasNext && keepUnrolling) {
         vector += values.next()
         if (elementsUnrolled % memoryCheckPeriod == 0) {
@@ -297,6 +327,18 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
 
       if (keepUnrolling) {
         // We successfully unrolled the entirety of this block
+        // Recording the generating cost and access timeStamp upon
+        // successfully unrolling
+        blockId match{
+          case id: RDDBlockId => {
+            val endStamp = System.currentTimeMillis
+            costMap(id) = endStamp - startStamp
+            if (!accessMap.contains(id))
+              accessMap(id) = ArrayBuffer[Long]()
+            accessMap(id).append(endStamp)
+          }
+          case _ =>
+        }
         Left(vector.toArray)
       } else {
         // We ran out of space while unrolling the values for this block

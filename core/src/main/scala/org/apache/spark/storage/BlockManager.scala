@@ -557,6 +557,8 @@ private[spark] class BlockManager(
         }
       }
     } else {
+      if (memoryStore.accessMap.contains(blockId))
+        logInfo(s"doGetLocal() there is a false eviction for block $blockId")
       logDebug(s"Block $blockId not registered locally")
     }
     None
