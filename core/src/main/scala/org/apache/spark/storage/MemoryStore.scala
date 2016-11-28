@@ -205,7 +205,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
         accessMap(id).append(System.currentTimeMillis)
         logInfo("getBytes(): accessMap: "+accessMap.toString)
       }
-      case _ =>
+      case _ => logInfo("getBytes(): accessMap: "+accessMap.toString)
     }
 
     if (entry == null) {
@@ -228,7 +228,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
         accessMap(id).append(System.currentTimeMillis)
         logInfo("getValues(): accessMap: "+accessMap.toString)
       }
-      case _ =>
+      case _ => logInfo("getValues(): accessMap: "+accessMap.toString)
     }
 
     if (entry == null) {
