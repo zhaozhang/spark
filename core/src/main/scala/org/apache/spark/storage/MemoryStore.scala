@@ -336,6 +336,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
             if (!accessMap.contains(id))
               accessMap(id) = ArrayBuffer[Long]()
             accessMap(id).append(endStamp)
+            logInfo(s"unrollSafely() records $id in accessMap: ${accessMap.toString}")
           }
           case _ =>
         }
