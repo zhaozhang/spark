@@ -64,6 +64,9 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
   //false eviction can be detected in BlockManager's doGetLocal()
   val accessMap = mutable.HashMap[BlockId, ArrayBuffer[Long]]()
 
+  //actionMap records generating and accessing actions with timeStamp
+  val actionMap = mutable.HashMap[Long, String]()
+
   // Initial memory to request before unrolling any block
   private val unrollMemoryThreshold: Long =
     conf.getLong("spark.storage.unrollMemoryThreshold", 1024 * 1024)
@@ -225,9 +228,12 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     //Recording access timestamp
     blockId match{
       case id: RDDBlockId => {
-        accessMap(id).append(System.currentTimeMillis)
+        val stamp = System.currentTimeMillis
+        accessMap(id).append(stamp)
+        actionMap(stamp) = "accessing " + id
         logInfo("getValues(): accessing block: "+id)
         logInfo("getValues(): accessMap: "+accessMap.toString)
+        logInfo(s"getValues() actionMap: ${actionMap.toString}")
       }
       case _ => 
     }
@@ -338,6 +344,8 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
               accessMap(id) = ArrayBuffer[Long]()
             accessMap(id).append(endStamp)
             logInfo(s"unrollSafely() records $id in costMap: ${costMap.toString}")
+            
+            actionMap(endStamp) = "generating " + id
           }
           case _ =>
         }
