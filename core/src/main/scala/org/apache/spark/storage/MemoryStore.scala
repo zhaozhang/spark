@@ -205,7 +205,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
         accessMap(id).append(System.currentTimeMillis)
         logInfo("getBytes(): accessMap: "+accessMap.toString)
       }
-      case _ => logInfo("getBytes(): accessMap: "+accessMap.toString)
+      case _ => 
     }
 
     if (entry == null) {
@@ -226,9 +226,10 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
     blockId match{
       case id: RDDBlockId => {
         accessMap(id).append(System.currentTimeMillis)
+        logInfo("getValues(): accessing block: "+id)
         logInfo("getValues(): accessMap: "+accessMap.toString)
       }
-      case _ => logInfo("getValues(): accessMap: "+accessMap.toString)
+      case _ => 
     }
 
     if (entry == null) {
@@ -336,7 +337,7 @@ private[spark] class MemoryStore(blockManager: BlockManager, memoryManager: Memo
             if (!accessMap.contains(id))
               accessMap(id) = ArrayBuffer[Long]()
             accessMap(id).append(endStamp)
-            logInfo(s"unrollSafely() records $id in accessMap: ${accessMap.toString}")
+            logInfo(s"unrollSafely() records $id in costMap: ${costMap.toString}")
           }
           case _ =>
         }
